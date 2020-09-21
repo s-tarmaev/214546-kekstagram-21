@@ -1,7 +1,7 @@
 # Личный проект «Кекстаграм» [![Build status][travis-image]][travis-url]
 
 * Студент: [Сергей Тармаев](https://up.htmlacademy.ru/javascript/21/user/214546).
-* Наставник: `Неизвестно`.
+* Наставник: `Евгений Щеколдин`.
 
 ---
 
