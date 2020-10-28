@@ -63,7 +63,7 @@ const createComment = () => {
   const avatar = createAvatar(getRandomInteger(1, FRIENDS));
   const message = getRandomArrayElement(COMMENTS);
   const name = getRandomArrayElement(NAMES);
-  return {avatar, message, name};
+  return { avatar, message, name };
 };
 
 const createPhoto = (i) => {
@@ -72,13 +72,13 @@ const createPhoto = (i) => {
   const likes = getRandomInteger(LIKES.MIN, LIKES.MAX);
   const comments = [];
   const commentsCount = getRandomInteger(
-      NUMBER_OF_COMMENTS.MIN,
-      NUMBER_OF_COMMENTS.MAX
+    NUMBER_OF_COMMENTS.MIN,
+    NUMBER_OF_COMMENTS.MAX
   );
   for (let j = 0; j <= commentsCount; j++) {
     comments.push(createComment());
   }
-  return {url, description, likes, comments};
+  return { url, description, likes, comments };
 };
 
 const photos = [];
@@ -110,3 +110,62 @@ for (let i = 0; i < photos.length; i++) {
   fragment.appendChild(createCard(photos[i]));
 }
 pictures.appendChild(fragment);
+
+/* Новое */
+
+const bigPicture = document.querySelector(".big-picture");
+bigPicture.classList.remove("hidden");
+
+const makeElement = (tagName, className, text) => {
+  const element = document.createElement(tagName);
+  element.classList.add(className);
+  if (text) {
+    element.textContent = text;
+  }
+  return element;
+};
+
+const pasteComment = (comment) => {
+  const listItem = makeElement("li", "social__comment");
+
+  const picture = makeElement("img", "social__picture");
+  picture.src = comment.comments[0].avatar;
+  picture.alt = comment.comments[0].name;
+  picture.width = 35;
+  picture.height = 35;
+  listItem.appendChild(picture);
+
+  const text = makeElement("p", "social__text", comment.comments[0].message);
+  listItem.appendChild(text);
+  return listItem;
+};
+
+const commentListItems = document.querySelector(".social__comments");
+
+for (let i = 0; i < photos.length; i++) {
+  const cardItem = pasteComment(photos[i]);
+  commentListItems.appendChild(cardItem);
+}
+
+const createBigCard = (bigCard) => {
+  const bigPicture = document
+    .querySelector(`.big-picture__img`)
+    .querySelector(`img`);
+  bigPicture.src = bigCard.url;
+
+  document.querySelector(`.likes-count`).textContent = bigCard.likes;
+  document.querySelector(`.comments-count`).textContent =
+    bigCard.comments.length;
+  document.querySelector(`.social__caption`).textContent = bigCard.description;
+  pasteComment();
+};
+createBigCard(photos[0]);
+
+const hideCount = document.querySelector(".social__comment-count");
+hideCount.classList.add("hidden");
+
+const hideLoader = document.querySelector(".comments-loader");
+hideLoader.classList.add("hidden");
+
+const body = document.querySelector("body");
+body.classList.add("modal-open");
