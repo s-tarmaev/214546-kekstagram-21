@@ -1,6 +1,4 @@
-"use strict";
-
-const PHOTOS = 25;
+'use strict';
 
 const DESCRIPTIONS = [
   `Если вы могли отправиться в любую точку мира, куда держали бы путь?`,
@@ -39,7 +37,16 @@ const NUMBER_OF_COMMENTS = {
   MAX: 5,
 };
 
+const PHOTOS = 25;
 const FRIENDS = 6;
+const photos = [];
+const pictures = document.querySelector(`.pictures`);
+const cardTemplate = document
+  .querySelector(`#picture`)
+  .content.querySelector(`.picture`);
+const bigPicture = document.querySelector(`.big-picture`);
+const hideLoader = document.querySelector(`.comments-loader`);
+const hideCount = document.querySelector(`.social__comment-count`);
 
 const getRandomInteger = (min, max) => {
   const random = min + Math.random() * (max + 1 - min);
@@ -63,7 +70,7 @@ const createComment = () => {
   const avatar = createAvatar(getRandomInteger(1, FRIENDS));
   const message = getRandomArrayElement(COMMENTS);
   const name = getRandomArrayElement(NAMES);
-  return { avatar, message, name };
+  return {avatar, message, name};
 };
 
 const createPhoto = (i) => {
@@ -72,25 +79,14 @@ const createPhoto = (i) => {
   const likes = getRandomInteger(LIKES.MIN, LIKES.MAX);
   const comments = [];
   const commentsCount = getRandomInteger(
-    NUMBER_OF_COMMENTS.MIN,
-    NUMBER_OF_COMMENTS.MAX
+      NUMBER_OF_COMMENTS.MIN,
+      NUMBER_OF_COMMENTS.MAX
   );
   for (let j = 0; j <= commentsCount; j++) {
     comments.push(createComment());
   }
-  return { url, description, likes, comments };
+  return {url, description, likes, comments};
 };
-
-const photos = [];
-for (let i = 1; i <= PHOTOS; i++) {
-  photos.push(createPhoto(i));
-}
-
-const pictures = document.querySelector(`.pictures`);
-
-const cardTemplate = document
-  .querySelector(`#picture`)
-  .content.querySelector(`.picture`);
 
 const createCard = (card) => {
   const cardElement = cardTemplate.cloneNode(true);
@@ -105,17 +101,6 @@ const createCard = (card) => {
   return cardElement;
 };
 
-const fragment = document.createDocumentFragment();
-for (let i = 0; i < photos.length; i++) {
-  fragment.appendChild(createCard(photos[i]));
-}
-pictures.appendChild(fragment);
-
-/* Новое */
-
-const bigPicture = document.querySelector(".big-picture");
-bigPicture.classList.remove("hidden");
-
 const makeElement = (tagName, className, text) => {
   const element = document.createElement(tagName);
   element.classList.add(className);
@@ -125,47 +110,57 @@ const makeElement = (tagName, className, text) => {
   return element;
 };
 
-const pasteComment = (comment) => {
-  const listItem = makeElement("li", "social__comment");
+const pasteElement = (comment) => {
+  const listItem = makeElement(`li`, `social__comment`);
 
-  const picture = makeElement("img", "social__picture");
-  picture.src = comment.comments[0].avatar;
-  picture.alt = comment.comments[0].name;
+  const picture = makeElement(`img`, `social__picture`);
+  picture.src = comment.avatar;
+  picture.alt = comment.name;
   picture.width = 35;
   picture.height = 35;
   listItem.appendChild(picture);
 
-  const text = makeElement("p", "social__text", comment.comments[0].message);
+  const text = makeElement(`p`, `social__text`, comment.message);
   listItem.appendChild(text);
   return listItem;
 };
 
-const commentListItems = document.querySelector(".social__comments");
-
-for (let i = 0; i < photos.length; i++) {
-  const cardItem = pasteComment(photos[i]);
-  commentListItems.appendChild(cardItem);
-}
-
 const createBigCard = (bigCard) => {
-  const bigPicture = document
+  const bigPictureImg = document
     .querySelector(`.big-picture__img`)
     .querySelector(`img`);
-  bigPicture.src = bigCard.url;
+  bigPictureImg.src = bigCard.url;
+
+  const commentListItems = document.querySelector(`.social__comments`);
+  for (let i = 0; i < bigCard.comments.length; i++) {
+    commentListItems.appendChild(pasteElement(bigCard.comments[i]));
+  }
 
   document.querySelector(`.likes-count`).textContent = bigCard.likes;
   document.querySelector(`.comments-count`).textContent =
     bigCard.comments.length;
   document.querySelector(`.social__caption`).textContent = bigCard.description;
-  pasteComment();
 };
+
+// 1. Генерация фотографий
+for (let i = 1; i <= PHOTOS; i++) {
+  photos.push(createPhoto(i));
+}
+
+// 2. Вставка фотографий в документ
+const fragment = document.createDocumentFragment();
+for (let i = 0; i < photos.length; i++) {
+  fragment.appendChild(createCard(photos[i]));
+}
+pictures.appendChild(fragment);
+
+// 3. Открытие модального окна и удаления прокрутки фона при скролле
+bigPicture.classList.remove(`hidden`);
+document.body.classList.add(`modal-open`);
+
+// 4. Заполнение модального окна данными с 1 фотографии
 createBigCard(photos[0]);
 
-const hideCount = document.querySelector(".social__comment-count");
-hideCount.classList.add("hidden");
-
-const hideLoader = document.querySelector(".comments-loader");
-hideLoader.classList.add("hidden");
-
-const body = document.querySelector("body");
-body.classList.add("modal-open");
+// 5. Скрытие счётчика комментариев и загрузки новых комментариев
+hideCount.classList.add(`hidden`);
+hideLoader.classList.add(`hidden`);
