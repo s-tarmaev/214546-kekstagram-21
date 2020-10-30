@@ -1,6 +1,4 @@
-"use strict";
-
-const PHOTOS = 25;
+'use strict';
 
 const DESCRIPTIONS = [
   `Если вы могли отправиться в любую точку мира, куда держали бы путь?`,
@@ -39,7 +37,16 @@ const NUMBER_OF_COMMENTS = {
   MAX: 5,
 };
 
+const PHOTOS = 25;
 const FRIENDS = 6;
+const photos = [];
+const pictures = document.querySelector(`.pictures`);
+const cardTemplate = document
+  .querySelector(`#picture`)
+  .content.querySelector(`.picture`);
+const bigPicture = document.querySelector(`.big-picture`);
+const hideLoader = document.querySelector(`.comments-loader`);
+const hideCount = document.querySelector(`.social__comment-count`);
 
 const getRandomInteger = (min, max) => {
   const random = min + Math.random() * (max + 1 - min);
@@ -81,17 +88,6 @@ const createPhoto = (i) => {
   return {url, description, likes, comments};
 };
 
-const photos = [];
-for (let i = 1; i <= PHOTOS; i++) {
-  photos.push(createPhoto(i));
-}
-
-const pictures = document.querySelector(`.pictures`);
-
-const cardTemplate = document
-  .querySelector(`#picture`)
-  .content.querySelector(`.picture`);
-
 const createCard = (card) => {
   const cardElement = cardTemplate.cloneNode(true);
 
@@ -105,8 +101,66 @@ const createCard = (card) => {
   return cardElement;
 };
 
+const makeElement = (tagName, className, text) => {
+  const element = document.createElement(tagName);
+  element.classList.add(className);
+  if (text) {
+    element.textContent = text;
+  }
+  return element;
+};
+
+const pasteElement = (comment) => {
+  const listItem = makeElement(`li`, `social__comment`);
+
+  const picture = makeElement(`img`, `social__picture`);
+  picture.src = comment.avatar;
+  picture.alt = comment.name;
+  picture.width = 35;
+  picture.height = 35;
+  listItem.appendChild(picture);
+
+  const text = makeElement(`p`, `social__text`, comment.message);
+  listItem.appendChild(text);
+  return listItem;
+};
+
+const createBigCard = (bigCard) => {
+  const bigPictureImg = document
+    .querySelector(`.big-picture__img`)
+    .querySelector(`img`);
+  bigPictureImg.src = bigCard.url;
+
+  const commentListItems = document.querySelector(`.social__comments`);
+  for (let i = 0; i < bigCard.comments.length; i++) {
+    commentListItems.appendChild(pasteElement(bigCard.comments[i]));
+  }
+
+  document.querySelector(`.likes-count`).textContent = bigCard.likes;
+  document.querySelector(`.comments-count`).textContent =
+    bigCard.comments.length;
+  document.querySelector(`.social__caption`).textContent = bigCard.description;
+};
+
+// 1. Генерация фотографий
+for (let i = 1; i <= PHOTOS; i++) {
+  photos.push(createPhoto(i));
+}
+
+// 2. Вставка фотографий в документ
 const fragment = document.createDocumentFragment();
 for (let i = 0; i < photos.length; i++) {
   fragment.appendChild(createCard(photos[i]));
 }
 pictures.appendChild(fragment);
+
+// 3. Открытие модального окна и удаления прокрутки фона при скролле
+bigPicture.classList.remove(`hidden`);
+document.body.classList.add(`modal-open`);
+
+// 4. Заполнение модального окна данными с 1 фотографии
+createBigCard(photos[0]);
+
+// 5. Скрытие счётчика комментариев и загрузки новых комментариев
+hideCount.classList.add(`hidden`);
+hideLoader.classList.add(`hidden`);
