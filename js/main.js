@@ -164,3 +164,145 @@ createBigCard(photos[0]);
 // 5. Скрытие счётчика комментариев и загрузки новых комментариев
 hideCount.classList.add(`hidden`);
 hideLoader.classList.add(`hidden`);
+
+/* 10. Личный проект: доверяй, но проверяй (часть 1) */
+
+const uploadFile = document.querySelector(`#upload-file`);
+const uploadOverlay = document.querySelector(`.img-upload__overlay`); // hidden
+const uploadCancel = uploadOverlay.querySelector(`#upload-cancel`);
+
+// открытие окна
+const openUploadForm = () => {
+  uploadOverlay.classList.remove(`hidden`);
+  document.body.classList.add(`modal-open`);
+
+  document.addEventListener(`keydown`, (evt) => {
+    if (evt.key === `Escape`) {
+      evt.preventDefault();
+      uploadOverlay.classList.add(`hidden`);
+    }
+  });
+};
+
+uploadFile.addEventListener(`change`, () => {
+  openUploadForm();
+});
+
+// закрытие окна
+const closeUploadForm = () => {
+  uploadOverlay.classList.add(`hidden`);
+  document.body.classList.remove(`modal-open`);
+
+  document.removeEventListener(`keydown`, (evt) => {
+    if (evt.key === `Escape`) {
+      evt.preventDefault();
+      uploadOverlay.classList.add(`hidden`);
+    }
+  });
+};
+
+uploadCancel.addEventListener(`click`, () => {
+  closeUploadForm();
+});
+
+const effectLevel = document.querySelector(`.effect-level`);
+const effectPin = effectLevel.querySelector(`.effect-level__pin`);
+const effectValue = effectLevel.querySelector(`.effect-level__value`);
+const effectDepth = effectLevel.querySelector(`.effect-level__depth`);
+const effectLine = effectLevel.querySelector(`.effect-level__line`);
+
+effectPin.onmousedown = (evt) => {
+  evt.preventDefault();
+
+  let shiftX = evt.clientX - effectPin.getBoundingClientRect().left;
+
+  document.addEventListener(`mousemove`, onMouseMove);
+  document.addEventListener(`mouseup`, onMouseUp);
+
+  function onMouseMove() {
+    let newLeft =
+      evt.clientX - shiftX - effectLevel.getBoundingClientRect().left;
+
+    if (newLeft < 0) {
+      newLeft = 0;
+    }
+    let rightEdge = effectLine.offsetWidth;
+    if (newLeft > rightEdge) {
+      newLeft = rightEdge;
+    }
+
+    effectPin.style.left = newLeft + `px`;
+    effectDepth.style.width = newLeft + `px`;
+    effectValue.value = Math.round((newLeft / rightEdge) * 100);
+  }
+
+  function onMouseUp() {
+    document.removeEventListener(`mouseup`, onMouseUp);
+    document.removeEventListener(`mousemove`, onMouseMove);
+  }
+};
+
+effectPin.ondragstart = () => {
+  return false;
+};
+
+// Хештеги
+
+const uploadForm = document.querySelector(`.img-upload__form`);
+const inputHashtags = uploadForm.querySelector(`.text__hashtags`);
+const MIN_HASHTAG_LENGTH = 2;
+const MAX_HASHTAG_LENGTH = 20;
+const NUMBER_OF_HASHTAG = 5;
+
+uploadForm.addEventListener(`submit`, (evt) => {
+  evt.preventDefault();
+});
+
+/*
+строка после решётки должна состоять из букв и чисел и не может содержать пробелы, спецсимволы (#, @, $ и т. п.), символы пунктуации (тире, дефис, запятая и т. п.), эмодзи и т. д.; ^#[\w]*$
+один и тот же хэш-тег не может быть использован дважды;
+если фокус находится в поле ввода хэш-тега, нажатие на Esc не должно приводить к закрытию формы редактирования изображения.
+*/
+
+const validateHashtags = () => {
+  const inputValue = inputHashtags.value.trim();
+  inputHashtags.setCustomValidity(``);
+  const hashTags = inputValue.toLowerCase().split(` `);
+  let regex = /^#[\w]*$/;
+  // /^#(?=.*[^0-9])[a-zа-яё0-9]{1,29}$/i;
+  //  /^#\W\w*$/;
+
+  for (let i = 0; i < hashTags.length; i++) {
+    if (hashTags[i][0] !== `#`) {
+      inputHashtags.setCustomValidity(`Хештег должен начинаться с #`);
+      return;
+    }
+
+    if (hashTags !== regex) {
+      inputHashtags.setCustomValidity(`Хештег должен начинаться с [#]`);
+      return;
+    }
+
+    if (hashTags.length > NUMBER_OF_HASHTAG) {
+      inputHashtags.setCustomValidity(`Нельзя указать больше 5 хештегов`);
+      return;
+    }
+
+    if (hashTags[i].length < MIN_HASHTAG_LENGTH) {
+      inputHashtags.setCustomValidity(
+          `Добавьте ещё ` + (MIN_HASHTAG_LENGTH - hashTags[i].length) + ` симв.`
+      );
+      return;
+    } else if (hashTags[i].length > MAX_HASHTAG_LENGTH) {
+      inputHashtags.setCustomValidity(
+          `Удалите лишние ` + (hashTags[i].length - MAX_HASHTAG_LENGTH) + ` симв.`
+      );
+      return;
+    }
+  }
+  inputHashtags.setCustomValidity(``);
+};
+
+// Мы валидируем значение инпута при вводе в него символов
+inputHashtags.addEventListener(`change`, validateHashtags);
+
