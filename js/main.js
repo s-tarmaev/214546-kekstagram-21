@@ -45,7 +45,7 @@ const cardTemplate = document
   .querySelector(`#picture`)
   .content.querySelector(`.picture`);
 const bigPicture = document.querySelector(`.big-picture`);
-const hideLoader = document.querySelector(`.comments-loader`);
+const hideLoader = bigPicture.querySelector(`.comments-loader`);
 const hideCount = document.querySelector(`.social__comment-count`);
 
 const getRandomInteger = (min, max) => {
@@ -155,7 +155,7 @@ for (let i = 0; i < photos.length; i++) {
 pictures.appendChild(fragment);
 
 // 3. Открытие модального окна и удаления прокрутки фона при скролле
-bigPicture.classList.remove(`hidden`);
+// bigPicture.classList.remove(`hidden`);
 document.body.classList.add(`modal-open`);
 
 // 4. Заполнение модального окна данными с 1 фотографии
@@ -219,7 +219,7 @@ effectPin.onmousedown = (evt) => {
   document.addEventListener(`mousemove`, onMouseMove);
   document.addEventListener(`mouseup`, onMouseUp);
 
-  function onMouseMove() {
+  function onMouseMove(evt) {
     let newLeft =
       evt.clientX - shiftX - effectLevel.getBoundingClientRect().left;
 
