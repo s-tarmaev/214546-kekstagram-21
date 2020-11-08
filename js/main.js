@@ -39,14 +39,28 @@ const NUMBER_OF_COMMENTS = {
 
 const PHOTOS = 25;
 const FRIENDS = 6;
+const MIN_HASHTAG_LENGTH = 2;
+const MAX_HASHTAG_LENGTH = 20;
+const NUMBER_OF_HASHTAG = 5;
 const photos = [];
 const pictures = document.querySelector(`.pictures`);
 const cardTemplate = document
   .querySelector(`#picture`)
   .content.querySelector(`.picture`);
 const bigPicture = document.querySelector(`.big-picture`);
-const hideLoader = document.querySelector(`.comments-loader`);
+const hideLoader = bigPicture.querySelector(`.comments-loader`);
 const hideCount = document.querySelector(`.social__comment-count`);
+const uploadFile = document.querySelector(`#upload-file`);
+const uploadOverlay = document.querySelector(`.img-upload__overlay`); // hidden
+const uploadCancel = uploadOverlay.querySelector(`#upload-cancel`);
+const effectLevel = document.querySelector(`.effect-level`);
+const effectPin = effectLevel.querySelector(`.effect-level__pin`);
+const effectValue = effectLevel.querySelector(`.effect-level__value`);
+const effectDepth = effectLevel.querySelector(`.effect-level__depth`);
+const effectLine = effectLevel.querySelector(`.effect-level__line`);
+const uploadForm = document.querySelector(`.img-upload__form`);
+const inputHashtags = uploadForm.querySelector(`.text__hashtags`);
+
 
 const getRandomInteger = (min, max) => {
   const random = min + Math.random() * (max + 1 - min);
@@ -155,7 +169,7 @@ for (let i = 0; i < photos.length; i++) {
 pictures.appendChild(fragment);
 
 // 3. Открытие модального окна и удаления прокрутки фона при скролле
-bigPicture.classList.remove(`hidden`);
+// bigPicture.classList.remove(`hidden`);
 document.body.classList.add(`modal-open`);
 
 // 4. Заполнение модального окна данными с 1 фотографии
@@ -164,3 +178,129 @@ createBigCard(photos[0]);
 // 5. Скрытие счётчика комментариев и загрузки новых комментариев
 hideCount.classList.add(`hidden`);
 hideLoader.classList.add(`hidden`);
+
+// открытие окна
+const handleOpenUploadForm = (evt) => {
+  if (evt.key === `Escape`) {
+    evt.preventDefault();
+    console.log(document.activeElement);
+    if (document.activeElement === inputHashtags) {
+      return;
+    }
+    uploadOverlay.classList.add(`hidden`);
+  }
+}
+
+const openUploadForm = () => {
+  uploadOverlay.classList.remove(`hidden`);
+  document.body.classList.add(`modal-open`);
+
+  document.addEventListener(`keydown`, handleOpenUploadForm);
+};
+
+uploadFile.addEventListener(`change`, () => {
+  openUploadForm();
+});
+
+// закрытие окна
+const closeUploadForm = () => {
+  uploadOverlay.classList.add(`hidden`);
+  document.body.classList.remove(`modal-open`);
+
+  document.removeEventListener(`keydown`, handleOpenUploadForm);
+};
+
+uploadCancel.addEventListener(`click`, () => {
+  closeUploadForm();
+});
+
+
+effectPin.onmousedown = (evt) => {
+  evt.preventDefault();
+
+  let shiftX = evt.clientX - effectPin.getBoundingClientRect().left;
+
+  document.addEventListener(`mousemove`, onMouseMove);
+  document.addEventListener(`mouseup`, onMouseUp);
+
+  function onMouseMove(evtx) {
+    let newLeft = evtx.clientX - shiftX - effectLevel.getBoundingClientRect().left;
+
+    if (newLeft < 0) {
+      newLeft = 0;
+    }
+    let rightEdge = effectLine.offsetWidth;
+    if (newLeft > rightEdge) {
+      newLeft = rightEdge;
+    }
+
+    effectPin.style.left = newLeft + `px`;
+    effectDepth.style.width = newLeft + `px`;
+    effectValue.value = Math.round((newLeft / rightEdge) * 100);
+  }
+
+  function onMouseUp() {
+    document.removeEventListener(`mouseup`, onMouseUp);
+    document.removeEventListener(`mousemove`, onMouseMove);
+  }
+};
+
+effectPin.ondragstart = () => {
+  return false;
+};
+
+// Хештеги
+
+uploadForm.addEventListener(`submit`, (evt) => {
+  evt.preventDefault();
+});
+
+const validateHashtags = () => {
+  const inputValue = inputHashtags.value;
+  inputHashtags.setCustomValidity(``);
+  const hashTags = inputValue.toLowerCase().split(` `);
+  const regex = /^#[\w\W]+$/;
+
+  for (let i = 0; i < hashTags.length; i++) {
+    if (hashTags[i][0] !== `#`) {
+      inputHashtags.setCustomValidity(
+          `Хештег должен начинаться с # и не иметь пробелов`
+      );
+      return;
+    }
+    if (hashTags.length > NUMBER_OF_HASHTAG) {
+      inputHashtags.setCustomValidity(`Нельзя указать больше 5 хештегов`);
+      return;
+    }
+    if (hashTags[i].length < MIN_HASHTAG_LENGTH) {
+      inputHashtags.setCustomValidity(
+          `Добавьте ещё ` + (MIN_HASHTAG_LENGTH - hashTags[i].length) + ` симв.`
+      );
+      return;
+    }
+    if (hashTags[i].length > MAX_HASHTAG_LENGTH) {
+      inputHashtags.setCustomValidity(
+          `Удалите лишние ` + (hashTags[i].length - MAX_HASHTAG_LENGTH) + ` симв.`
+      );
+      return;
+    }
+    if (!regex.test(hashTags[i])) {
+      inputHashtags.setCustomValidity(
+          `Хештег не должен содержать пробелы, спецсимволы (#, @, $ и т.д.) и символы пунктуации`
+      );
+      return;
+    }
+    for (let k = i + 1; k < hashTags.length; k++) {
+      if (hashTags[i] === hashTags[k]) {
+        inputHashtags.setCustomValidity(
+            `Есть одинаковые хeштеги! Проверьте хeштеги ` + (i + 1) + ` и ` + (k + 1)
+        );
+        return;
+      }
+    }
+  }
+  inputHashtags.setCustomValidity(``);
+};
+
+// Мы валидируем значение инпута при вводе в него символов
+inputHashtags.addEventListener(`change`, validateHashtags);
