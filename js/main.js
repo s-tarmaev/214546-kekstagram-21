@@ -41,7 +41,14 @@ const PHOTOS = 25;
 const FRIENDS = 6;
 const MIN_HASHTAG_LENGTH = 2;
 const MAX_HASHTAG_LENGTH = 20;
+const MAX_COMMENT_LENGTH = 140;
 const NUMBER_OF_HASHTAG = 5;
+const SCALE_VALUE = {
+  MIN: 25,
+  MAX: 1000,
+  STEP: 25,
+};
+
 const photos = [];
 const pictures = document.querySelector(`.pictures`);
 const cardTemplate = document
@@ -51,7 +58,7 @@ const bigPicture = document.querySelector(`.big-picture`);
 const hideLoader = bigPicture.querySelector(`.comments-loader`);
 const hideCount = document.querySelector(`.social__comment-count`);
 const uploadFile = document.querySelector(`#upload-file`);
-const uploadOverlay = document.querySelector(`.img-upload__overlay`); // hidden
+const uploadOverlay = document.querySelector(`.img-upload__overlay`);
 const uploadCancel = uploadOverlay.querySelector(`#upload-cancel`);
 const effectLevel = document.querySelector(`.effect-level`);
 const effectPin = effectLevel.querySelector(`.effect-level__pin`);
@@ -60,7 +67,18 @@ const effectDepth = effectLevel.querySelector(`.effect-level__depth`);
 const effectLine = effectLevel.querySelector(`.effect-level__line`);
 const uploadForm = document.querySelector(`.img-upload__form`);
 const inputHashtags = uploadForm.querySelector(`.text__hashtags`);
+const inputComment = uploadForm.querySelector(`.text__description`);
+const scaleSmaller = document.querySelector(`.scale__control--smaller`);
+const scaleBigger = document.querySelector(`.scale__control--bigger`);
+const scaleInput = document.querySelector(`.scale__control--value`);
+const closeButton = document.querySelector(`.big-picture__cancel`);
+const smallPictures = document.querySelectorAll(`.picture`);
+const imagePreview = uploadOverlay.querySelector(`.img-upload__preview`);
+const effectItem = document.querySelectorAll(`.effects__radio`);
+const effectNames = [`none`, `chrome`, `sepia`, `marvin`, `phobos`, `heat`];
 
+let effectsDirectoryFilter;
+let currentEffect;
 
 const getRandomInteger = (min, max) => {
   const random = min + Math.random() * (max + 1 - min);
@@ -109,7 +127,7 @@ const createCard = (card) => {
 
   for (let i = 0; i < card.comments.length; i++) {
     cardElement.querySelector(`.picture__comments`).textContent =
-      card.comments[i].message;
+      card.comments.message;
   }
   cardElement.querySelector(`.picture__likes`).textContent = card.likes;
   return cardElement;
@@ -169,32 +187,57 @@ for (let i = 0; i < photos.length; i++) {
 pictures.appendChild(fragment);
 
 // 3. Открытие модального окна и удаления прокрутки фона при скролле
-// bigPicture.classList.remove(`hidden`);
-document.body.classList.add(`modal-open`);
+const addPictureClickHandler = (pictureItem, dataCard) => {
+  pictureItem.addEventListener(`click`, () => {
+    createBigCard(dataCard);
+    bigPicture.classList.remove(`hidden`);
+    document.body.classList.add(`modal-open`);
+  });
+};
 
-// 4. Заполнение модального окна данными с 1 фотографии
-createBigCard(photos[0]);
+for (let i = 0; i < smallPictures.length; i++) {
+  addPictureClickHandler(smallPictures[i], photos[i]);
+}
+
+// 4. Закрытие модального окна
+
+const closeBigPicture = () => {
+  document.removeEventListener(`keydown`, onBigPictureEscPress);
+  bigPicture.classList.add(`hidden`);
+};
+
+const onBigPictureEscPress = (evt) => {
+  if (evt.key === `Escape`) {
+    closeBigPicture();
+  }
+};
+
+closeButton.addEventListener(`click`, () => {
+  closeBigPicture();
+});
 
 // 5. Скрытие счётчика комментариев и загрузки новых комментариев
 hideCount.classList.add(`hidden`);
 hideLoader.classList.add(`hidden`);
 
-// открытие окна
+// открытие окна формы
 const handleOpenUploadForm = (evt) => {
   if (evt.key === `Escape`) {
     evt.preventDefault();
-    console.log(document.activeElement);
     if (document.activeElement === inputHashtags) {
+      return;
+    }
+    if (document.activeElement === inputComment) {
       return;
     }
     uploadOverlay.classList.add(`hidden`);
   }
-}
+};
 
 const openUploadForm = () => {
   uploadOverlay.classList.remove(`hidden`);
   document.body.classList.add(`modal-open`);
-
+  effectLevel.classList.add(`hidden`);
   document.addEventListener(`keydown`, handleOpenUploadForm);
 };
 
@@ -214,7 +257,6 @@ uploadCancel.addEventListener(`click`, () => {
   closeUploadForm();
 });
 
-
 effectPin.onmousedown = (evt) => {
   evt.preventDefault();
 
@@ -224,12 +266,15 @@ effectPin.onmousedown = (evt) => {
   document.addEventListener(`mouseup`, onMouseUp);
 
   function onMouseMove(evtx) {
-    let newLeft = evtx.clientX - shiftX - effectLevel.getBoundingClientRect().left;
+    let newLeft =
+      evtx.clientX - shiftX - effectLevel.getBoundingClientRect().left;
 
     if (newLeft < 0) {
       newLeft = 0;
     }
+
     let rightEdge = effectLine.offsetWidth;
+
     if (newLeft > rightEdge) {
       newLeft = rightEdge;
     }
@@ -237,6 +282,7 @@ effectPin.onmousedown = (evt) => {
     effectPin.style.left = newLeft + `px`;
     effectDepth.style.width = newLeft + `px`;
     effectValue.value = Math.round((newLeft / rightEdge) * 100);
+    effectsDirectory[effectsDirectoryFilter](newLeft / rightEdge);
   }
 
   function onMouseUp() {
@@ -304,3 +350,87 @@ const validateHashtags = () => {
 
 // Мы валидируем значение инпута при вводе в него символов
 inputHashtags.addEventListener(`change`, validateHashtags);
+
+inputComment.addEventListener(`input`, () => {
+  const commentLength = inputComment.value.length;
+
+  if (commentLength > MAX_COMMENT_LENGTH) {
+    inputComment.setCustomValidity(
+        `Удалите лишние ` + (commentLength - MAX_COMMENT_LENGTH) + ` симв.`
+    );
+  } else {
+    inputComment.setCustomValidity(``);
+  }
+});
+
+// Функции для эффектов
+
+const getOriginal = () => {
+  effectLevel.classList.add(`hidden`);
+};
+
+const getGrayscale = (grayscale) => {
+  imagePreview.style.filter = `grayscale(` + grayscale + `)`;
+};
+
+const getSepia = (sepia) => {
+  imagePreview.style.filter = `sepia(` + sepia + `)`;
+};
+
+const getInvert = (invert) => {
+  imagePreview.style.filter = `invert(` + invert * 100 + `%)`;
+};
+
+const getBlur = (blur) => {
+  imagePreview.style.filter = `blur(` + blur * 3 + `px)`;
+};
+
+const getBrightness = (brightness) => {
+  imagePreview.style.filter = `brightness(` + (brightness * 2 + 1) + `)`;
+};
+
+const effectsDirectory = {
+  none: getOriginal,
+  chrome: getGrayscale,
+  sepia: getSepia,
+  marvin: getInvert,
+  phobos: getBlur,
+  brightness: getBrightness,
+};
+
+const addEffectHandler = (effects, effectName) => {
+  effects.addEventListener(`click`, () => {
+    effectLevel.classList.remove(`hidden`);
+    imagePreview.classList.remove(currentEffect);
+    imagePreview.removeAttribute(`style`);
+    effectPin.style.left = 100 + `%`;
+    effectDepth.style.width = 100 + `%`;
+    currentEffect = `effects__preview--` + effectName;
+    imagePreview.classList.add(currentEffect);
+
+    effectsDirectoryFilter = effectName;
+    if (effectName === `none`) {
+      effectLevel.classList.add(`hidden`);
+    }
+  });
+};
+
+for (let i = 0; i < effectItem.length; i++) {
+  addEffectHandler(effectItem[i], effectNames[i]);
+}
+
+const scaleImage = (directionScale) => {
+  let currentScale = parseInt(scaleInput.value, 10);
+  currentScale = currentScale + SCALE_VALUE.STEP * directionScale;
+  if (currentScale >= SCALE_VALUE.MIN && currentScale <= SCALE_VALUE.MAX) {
+    scaleInput.value = currentScale + `%`;
+    imagePreview.style.transform = `scale(` + currentScale / 100 + `)`;
+  }
+};
+
+scaleSmaller.addEventListener(`click`, () => {
+  scaleImage(-1);
+});
+scaleBigger.addEventListener(`click`, () => {
+  scaleImage(1);
+});
