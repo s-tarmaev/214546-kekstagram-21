@@ -45,7 +45,7 @@ const MAX_COMMENT_LENGTH = 140;
 const NUMBER_OF_HASHTAG = 5;
 const SCALE_VALUE = {
   MIN: 25,
-  MAX: 1000,
+  MAX: 100,
   STEP: 25,
 };
 
