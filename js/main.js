@@ -72,7 +72,6 @@ const scaleSmaller = document.querySelector(`.scale__control--smaller`);
 const scaleBigger = document.querySelector(`.scale__control--bigger`);
 const scaleInput = document.querySelector(`.scale__control--value`);
 const closeButton = document.querySelector(`.big-picture__cancel`);
-const smallPictures = document.querySelectorAll(`.picture`);
 const imagePreview = uploadOverlay.querySelector(`.img-upload__preview`);
 const effectItem = document.querySelectorAll(`.effects__radio`);
 const effectNames = [`none`, `chrome`, `sepia`, `marvin`, `phobos`, `heat`];
@@ -195,6 +194,7 @@ const addPictureClickHandler = (pictureItem, dataCard) => {
   });
 };
 
+const smallPictures = document.querySelectorAll(`.picture`);
 for (let i = 0; i < smallPictures.length; i++) {
   addPictureClickHandler(smallPictures[i], photos[i]);
 }
@@ -386,7 +386,7 @@ const getBlur = (blur) => {
 };
 
 const getBrightness = (brightness) => {
-  imagePreview.style.filter = `brightness(` + (brightness * 2 + 1) + `)`;
+  imagePreview.style.filter = `brightness(` + (brightness * 3 + 1) + `)`;
 };
 
 const effectsDirectory = {
@@ -395,7 +395,7 @@ const effectsDirectory = {
   sepia: getSepia,
   marvin: getInvert,
   phobos: getBlur,
-  brightness: getBrightness,
+  heat: getBrightness,
 };
 
 const addEffectHandler = (effects, effectName) => {
@@ -403,6 +403,7 @@ const addEffectHandler = (effects, effectName) => {
     effectLevel.classList.remove(`hidden`);
     imagePreview.classList.remove(currentEffect);
     imagePreview.removeAttribute(`style`);
+    scaleImage();
     effectPin.style.left = 100 + `%`;
     effectDepth.style.width = 100 + `%`;
     currentEffect = `effects__preview--` + effectName;
@@ -421,6 +422,10 @@ for (let i = 0; i < effectItem.length; i++) {
 
 const scaleImage = (directionScale) => {
   let currentScale = parseInt(scaleInput.value, 10);
+  if (!directionScale) {
+    imagePreview.style.transform = `scale(` + currentScale / 100 + `)`;
+    return;
+  }
   currentScale = currentScale + SCALE_VALUE.STEP * directionScale;
   if (currentScale >= SCALE_VALUE.MIN && currentScale <= SCALE_VALUE.MAX) {
     scaleInput.value = currentScale + `%`;
