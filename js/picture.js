@@ -9,6 +9,19 @@
   const closeButton = bigPicture.querySelector(`.big-picture__cancel`);
   const pictures = document.querySelector(`.pictures`);
 
+  const createCard = (card) => {
+    const cardElement = window.data.cardTemplate.cloneNode(true);
+
+    cardElement.querySelector(`.picture__img`).src = card.url;
+
+    for (let i = 0; i < card.comments.length; i++) {
+      cardElement.querySelector(`.picture__comments`).textContent =
+        card.comments.message;
+    }
+    cardElement.querySelector(`.picture__likes`).textContent = card.likes;
+    return cardElement;
+  };
+
   const pasteElement = (comment) => {
     const listItem = window.util.makeElement(`li`, `social__comment`);
 
@@ -50,7 +63,7 @@
   // 2. Вставка фотографий в документ
   const fragment = document.createDocumentFragment();
   for (let i = 0; i < photos.length; i++) {
-    fragment.appendChild(window.data.createCard(photos[i]));
+    fragment.appendChild(createCard(photos[i]));
   }
   pictures.appendChild(fragment);
 

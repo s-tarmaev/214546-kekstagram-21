@@ -43,9 +43,7 @@
     MAX: 5,
   };
 
-  const cardTemplate = document
-    .querySelector(`#picture`)
-    .content.querySelector(`.picture`);
+  const cardTemplate = document.querySelector(`#picture`).content.querySelector(`.picture`);
 
   const createUrl = (number) => {
     return `photos/` + number + `.jpg`;
@@ -79,21 +77,10 @@
     return {url, description, likes, comments};
   };
 
-  const createCard = (card) => {
-    const cardElement = cardTemplate.cloneNode(true);
 
-    cardElement.querySelector(`.picture__img`).src = card.url;
-
-    for (let i = 0; i < card.comments.length; i++) {
-      cardElement.querySelector(`.picture__comments`).textContent =
-        card.comments.message;
-    }
-    cardElement.querySelector(`.picture__likes`).textContent = card.likes;
-    return cardElement;
-  };
 
   window.data = {
+    cardTemplate: cardTemplate,
     createPhoto: createPhoto,
-    createCard: createCard
   };
 })();
