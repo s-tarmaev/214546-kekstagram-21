@@ -23,6 +23,8 @@
   const uploadOverlay = uploadForm.querySelector(`.img-upload__overlay`);
   const uploadCancel = uploadOverlay.querySelector(`#upload-cancel`);
   const imagePreview = document.querySelector(`.img-upload__preview`);
+  // const inputHashtags = document.querySelector(`.text__hashtags`);
+  // const inputComment = document.querySelector(`.text__description`);
 
   let effectsDirectoryFilter;
   let currentEffect;
@@ -31,10 +33,10 @@
   const handleOpenUploadForm = (evt) => {
     if (evt.key === `Escape`) {
       evt.preventDefault();
-      if (document.activeElement === inputHashtags) {
+      if (document.activeElement === window.validation.inputHashtags) {
         return;
       }
-      if (document.activeElement === inputComment) {
+      if (document.activeElement === window.validation.inputComment) {
         return;
       }
       uploadOverlay.classList.add(`hidden`);
